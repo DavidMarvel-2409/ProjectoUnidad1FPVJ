@@ -107,7 +107,6 @@ namespace ProjectoU1SnowRiderChallenge
             {
                 _sb.Draw(_tuerca, BoxA, Color.White);
                 _sb.Draw(_tuerca, BoxB, Color.White);
-                //_sb.Draw(_base, Ramp, Color.White);
                 Vector2 rr = new Vector2(Ramp.X, Ramp.Y);
                 _sb.Draw(_base, rr, null, Color.White, Ramp_angle, new Vector2(0, 0.5f), new Vector2(Ramp_length, Ramp_width), SpriteEffects.None, 0f);
                 Vector2 obb = new Vector2(Ob.X, Ob.Y);
