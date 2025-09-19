@@ -37,17 +37,15 @@ namespace ProjectoU1SnowRiderChallenge
             _graphics.PreferredBackBufferHeight = al;
             _graphics.ApplyChanges();
             ancho_global = GraphicsDevice.Viewport.Width / 40;
-            V1 = new Var(new Vector2(ancho_global, ancho_global), ancho_global, 5, 0.7f);
-            V2 = new Var(new Vector2(ancho_global, ancho_global * 3), ancho_global, 1.3f, 0.5f);
-            V3 = new Var(new Vector2(ancho_global, ancho_global * 5), ancho_global, 1.4f, 0.2f);
+            V1 = new Var(new Vector2(200f, 63f), new Vector2(542f, 148f), ancho_global, 0.1f, 0.7f, true);
+            V2 = new Var(new Vector2(169f, 262f), new Vector2(697f, 182f), ancho_global, 0.1f, 0.5f, true);
+            V3 = new Var(new Vector2(57f, 323f), new Vector2(463f, 425f), ancho_global, 0.1f, 0.2f, true);
 
-            Meta = new Rectangle((int)ancho_global * 10, (int)ancho_global * 10, ancho_global * 5, ancho_global * 3);
+            Meta = new Rectangle((int)ancho_global * 22, (int)ancho_global * 20, ancho_global * 5, ancho_global * 3);
 
             Vector2 posP = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 3), ancho_global * 3);
             P1 = new Player(posP, (int)(ancho_global * 1.7F), 3);
 
-
-            V1.BoxB.X = 200;
             V1.move();
             V2.move();
             V3.move();
@@ -93,6 +91,17 @@ namespace ProjectoU1SnowRiderChallenge
             if (Keyboard.GetState().IsKeyDown(Keys.R))
                 P1.Re_Spawn();
 
+            if (Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump)
+            {
+                P1.Jump(gameTime);
+                P1.is_jump = true;
+            }
+            if (Keyboard.GetState().IsKeyUp(Keys.Space))
+            {
+                P1.is_jump = false;
+            }
+           
+
             if (Keyboard.GetState().IsKeyDown(Keys.Enter))
             {
                 P1.is_started = true;
@@ -115,7 +124,7 @@ namespace ProjectoU1SnowRiderChallenge
             V2.dd(_spriteBatch, _tuerca, _texture_bace, _font, P1.is_started);
             V3.dd(_spriteBatch, _tuerca, _texture_bace, _font, P1.is_started);
 
-            P1.dr(_spriteBatch, _pelota, _texture_bace);
+            P1.dr(_spriteBatch, _pelota, _texture_bace, _font);
 
             _spriteBatch.Draw(_texture_bace, Meta, Color.Green);
             Vector2 tM = new Vector2(_font.MeasureString("META").X / 2 + Meta.X, _font.MeasureString("META").Y / 2 + Meta.Y);
@@ -125,38 +134,62 @@ namespace ProjectoU1SnowRiderChallenge
 
             base.Draw(gameTime);
         }
+        public static bool PointNearLine(Vector2 p, Vector2 a, Vector2 b, float tolerance)
+        {
+            // Vector de la línea
+            Vector2 ab = b - a;
+            Vector2 ap = p - a;
+
+            float t = Vector2.Dot(ap, ab) / ab.LengthSquared();
+            t = MathHelper.Clamp(t, 0f, 1f);
+
+            Vector2 closest = a + t * ab;
+            float dist = Vector2.Distance(p, closest);
+
+            return dist <= tolerance;
+        }
 
         public class Player
         {
-            public Rectangle Box;
-            public Vector2 Position, Origen;
+            public Rectangle Box, BoxInfo;
+            public Vector2 Position, Origen, normal;
             public float speed, angle, acc, time, peso;
             public int vidas;
-            public bool is_started;
+            public bool is_started, is_jump, air;
             public Player(Vector2 po, int an, int vids)
             {
                 is_started = false;
                 Position = po;
                 vidas = vids;
                 speed = 0;
-                angle = 0;
+                angle = MathHelper.PiOver2;
                 acc = 0;
                 time = 0;
                 peso = 0;
                 Box = new Rectangle((int)Position.X, (int)Position.Y, an, an);
+                normal = new Vector2();
+                is_jump = false;
+                air = true;
+                BoxInfo = new Rectangle(an/2, an/2, an * 5, (int)(an * 1.5f));
             }
             public void Re_Spawn()
             {
                 Position = Origen;
                 vidas -= 1;
-                angle = 0;
+                angle = MathHelper.PiOver2;
                 speed = 0;
 
             }
 
-            public void dr(SpriteBatch _sb, Texture2D _pelota, Texture2D _base)
+            public void dr(SpriteBatch _sb, Texture2D _pelota, Texture2D _base, SpriteFont _fue)
             {
                 _sb.Draw(_pelota, Box, Color.White);
+
+                Color fondo = new Color(29f / 255f, 73f / 255f, 88f / 255f);
+                Color TEXT = new Color(188f / 255f, 229f / 255, 217f / 225f);
+                _sb.Draw(_base, BoxInfo, fondo);
+                _sb.DrawString(_fue, "S: "+Position.X+"."+Position.Y+"m "+"V: "+speed+"m/s"+"\nVidas: "+vidas, new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT);
+                
             }
 
             public void move_mouse()
@@ -184,61 +217,105 @@ namespace ProjectoU1SnowRiderChallenge
                 //colision
                 // detectar sobre qué rampa está
                 Var rampaActiva = null;
-                if (Box.Intersects(V1.GetBoundingBox()))
-                {
+
+                Vector2 centerP = new Vector2(Box.Center.X, Box.Y+ Box.Height);
+
+                if (PointNearLine(centerP, V1.BoxA.Center.ToVector2(), V1.BoxB.Center.ToVector2(), V1.Ramp_width / 2))
                     rampaActiva = V1;
-                    Console.WriteLine("topo");
-                }
-                else if (Box.Intersects(V2.GetBoundingBox()))
-                {
+                else if (PointNearLine(centerP, V2.BoxA.Center.ToVector2(), V2.BoxB.Center.ToVector2(), V2.Ramp_width / 2))
                     rampaActiva = V2;
-                    Console.WriteLine("topo");
-                }
-                else if (Box.Intersects(V3.GetBoundingBox()))
-                {
+                else if (PointNearLine(centerP, V3.BoxA.Center.ToVector2(), V3.BoxB.Center.ToVector2(), V3.Ramp_width / 2))
                     rampaActiva = V3;
-                    Console.WriteLine("topo");
-                }
+
+                float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
                 if (rampaActiva != null)
                 {
-                    /*float g = 9.8f;
-                    float theta = rampaActiva.Ramp_angle;
-                    acc = g * (float)Math.Sin(theta) - rampaActiva.muK * g * (float)Math.Cos(theta);
-                    angle = theta;*/
+                    air = false;
                     // Obtener centros de las cajas de la rampa
                     Vector2 A = new Vector2(rampaActiva.BoxA.X + rampaActiva.BoxA.Width / 2,
                                             rampaActiva.BoxA.Y + rampaActiva.BoxA.Height / 2);
                     Vector2 B = new Vector2(rampaActiva.BoxB.X + rampaActiva.BoxB.Width / 2,
                                             rampaActiva.BoxB.Y + rampaActiva.BoxB.Height / 2);
 
-                    // Vector de la rampa
-                    Vector2 rampDir = B - A;
-                    rampDir.Normalize(); // Dirección unitaria
-
                     // Gravedad
                     float g = 9.8f;
 
-                    // Componente de la gravedad a lo largo de la rampa
-                    acc = g * rampDir.Y - rampaActiva.muK * g * rampDir.X;
+                    // Dirección unitaria de la rampa
+                    Vector2 rampDir;
+                    if (B.Y < A.Y)
+                        rampDir = Vector2.Normalize(A - B);
+                    else
+                        rampDir = Vector2.Normalize(B - A);
 
-                    // Guardar ángulo de la rampa para mover al jugador
+                    // Gravedad
+                    Vector2 gravity = new Vector2(0, g);
+
+                    // Proyección: producto punto
+                    float accAlongRamp = Vector2.Dot(gravity, rampDir);
+
+                    // Fricción (opuesta al movimiento)
+                    float friction = rampaActiva.muK * g * (float)Math.Cos(rampaActiva.Ramp_angle);
+
+                    // Aceleración total
+                    acc = accAlongRamp - Math.Sign(speed) * friction;
+
+                    // Guardar ángulo de la rampa
                     angle = (float)Math.Atan2(rampDir.Y, rampDir.X);
+
+                    speed += acc * dt;
+                    Position += rampDir * speed * dt;
+
+                    //colision con el obstaculo
+                    if (damage(rampaActiva))
+                        vidas--;
                 }
                 else
                 {
-                    acc = 9.8f; // caída libre
-                    angle = MathHelper.PiOver2;
+                    // caída libre hacia abajo
+                    acc = 9.8f;
+
+                    if (angle < MathHelper.PiOver2)
+                    {
+                        angle += 1 * dt;
+                    }
+                    if (angle > MathHelper.PiOver2)
+                    {
+                        angle -= 1 * dt;
+                    }
+
+                    speed += acc * dt;
+
+                    Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+                    Position += dir * speed * dt;
+                    air = true;
                 }
 
-                //caida
-
-                float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                speed += acc * dt;
-                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-                Position += dir * speed * dt;
                 Box.X = (int)Position.X;
                 Box.Y = (int)Position.Y;
+
+            }
+
+            public void Jump(GameTime gameTime)
+            {
+                if (!air)
+                {
+                    float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    Vector2 ramp_dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+                    normal = new Vector2(-ramp_dir.Y, ramp_dir.X);
+                    float jump_force = 2000;
+                    Vector2 Jump_ = normal * jump_force;
+                    Position -= Jump_ * dt;
+
+                }
+            }
+
+            private bool damage( Var ramp)
+            {
+                if (Box.Contains(ramp.Ob.X, ramp.Ob.Y))
+                    return true;
+
+                return false;
             }
 
         }
@@ -251,17 +328,19 @@ namespace ProjectoU1SnowRiderChallenge
             private float ob_pos_ramp;
             public float Ramp_length, Ramp_width, Ramp_angle;
             public float muK;
+            public bool is_Static;
 
-            public Var(Vector2 origen, float ancho, float _muk, float ob_dis)
+            public Var(Vector2 origen,Vector2 origenB, float ancho, float _muk, float ob_dis, bool st)
             {
                 muK = _muk;
                 BoxA = new Rectangle((int)origen.X, (int)origen.Y, (int)ancho, (int)ancho);
-                BoxB = new Rectangle((int)(origen.X + ancho * 4), (int)origen.Y, (int)ancho, (int)ancho);
+                BoxB = new Rectangle((int)(origenB.X), (int)origenB.Y, (int)ancho, (int)ancho);
                 float ramp_ancho = (ancho * 30) / 100;
                 float Dx = BoxB.X - BoxA.X;
                 Ramp = new Rectangle(BoxA.X + ((int)ramp_ancho), BoxA.Y + ((int)ramp_ancho), (int)(Dx + (ramp_ancho)), (int)ramp_ancho);
                 Ob = new Rectangle((int)(Ramp.X + (Ramp.Width * ob_dis)), Ramp.Y, (int)(ancho * 0.5f), (int)(ancho * 0.5f));
                 ob_pos_ramp = ob_dis;
+                is_Static = st;
             }
 
             public void dd(SpriteBatch _sb, Texture2D _tuerca,Texture2D _base, SpriteFont fuente, bool active)
@@ -276,6 +355,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Vector2 obb = new Vector2(Ob.X, Ob.Y);
                 _sb.Draw(_base, obb, null, Color.Brown, Ramp_angle, new Vector2(0, 0.5f), new Vector2(Ob.Width, Ob.Width), SpriteEffects.None, 0f);
                 draw_info(_sb, fuente);
+
             }
 
             public void move()
@@ -325,12 +405,15 @@ namespace ProjectoU1SnowRiderChallenge
 
             private void draw_info(SpriteBatch _sb, SpriteFont fuente)
             {
-                Vector2 tGr = new Vector2((int)BoxA.X - BoxA.Width, (int)BoxA.Y - BoxA.Width);
-                Vector2 tMuk = new Vector2((int)BoxA.X - BoxA.Width, (int)BoxA.Y - BoxA.Width * 2);
-                // Convertir a grados
                 float grados = MathHelper.ToDegrees(Ramp_angle);
-                _sb.DrawString(fuente, "Angle: " + ((int)grados * -1), tGr, Color.Black);
-                _sb.DrawString(fuente, "muk: " + muK, tMuk, Color.Black);
+                string txt = "Angle: " + ((int)grados * -1) + "\nmuK: " + muK;
+                Vector2 ogr = new Vector2(Math.Abs(BoxA.Center.X - BoxB.Center.X), Math.Abs(BoxA.Center.Y - BoxB.Center.Y));
+                Vector2 tGr = new Vector2(ogr.X - (fuente.MeasureString(txt).X / 2), ogr.Y + (fuente.MeasureString(txt).Y / 2));
+                Console.WriteLine("centerX: " + tGr.X + "centerY: " + tGr.Y);
+                //Vector2 tMuk = new Vector2((int)BoxA.X - BoxA.Width, (int)BoxA.Y - BoxA.Width * 2);
+                // Convertir a grados
+                _sb.DrawString(fuente, txt, tGr, Color.Black);
+                //_sb.DrawString(fuente, "muk: " + muK, tMuk, Color.Black);
 
             }
             public Vector2[] GetRampVertices()
@@ -348,24 +431,6 @@ namespace ProjectoU1SnowRiderChallenge
                 Vector2 v4 = centerA - offset;
 
                 return new[] { v1, v2, v3, v4 };
-            }
-            public Rectangle GetBoundingBox()
-            {
-                var verts = GetRampVertices();
-                float minX = float.MaxValue, minY = float.MaxValue;
-                float maxX = float.MinValue, maxY = float.MinValue;
-
-                foreach (var v in verts)
-                {
-                    if (v.X < minX) minX = v.X;
-                    if (v.Y < minY) minY = v.Y;
-                    if (v.X > maxX) maxX = v.X;
-                    if (v.Y > maxY) maxY = v.Y;
-                }
-
-                int padding = 2;
-
-                return new Rectangle((int)minX, (int)minY - padding, (int)(maxX - minX), (int)(maxY - minY) - 2 * padding);
             }
         }
     }
