@@ -14,6 +14,7 @@ namespace ProjectoU1SnowRiderChallenge
         private Texture2D _tuerca;
         private Texture2D _texture_bace;
         private Texture2D _pelota;
+        private int al;
         private bool GameOver = false;
 
         private Rectangle Meta;
@@ -33,19 +34,19 @@ namespace ProjectoU1SnowRiderChallenge
 
         protected override void Initialize()
         {
-            int al = 500;
+            al = 900;
             int an = (al * 16) / 9;
             _graphics.PreferredBackBufferWidth = an;
             _graphics.PreferredBackBufferHeight = al;
             _graphics.ApplyChanges();
             ancho_global = GraphicsDevice.Viewport.Width / 40;
-            V1 = new Var(new Vector2(200f, 63f), new Vector2(542f, 148f), ancho_global, 0.01f, 0.7f, true);
-            V2 = new Var(new Vector2(169f, 262f), new Vector2(697f, 182f), ancho_global, 0.1f, 0.5f, true);
-            V3 = new Var(new Vector2(47f, 313f), new Vector2(463f, 425f), ancho_global, 0.5f, 0.8f, true);
+            V1 = new Var(new Vector2(((200f * al) / 500), ((63f * al) / 500)), new Vector2(((542f * al) / 500), ((148f * al) / 500)), ancho_global, 0.01f, 0.7f, true);
+            V2 = new Var(new Vector2(((169f * al) / 500), ((262f * al) / 500)), new Vector2(((697f * al) / 500), ((182f * al) / 500)), ancho_global, 0.1f, 0.5f, true);
+            V3 = new Var(new Vector2(((47f * al) / 500), ((313f * al) / 500)), new Vector2(((463f * al) / 500), ((425f * al) / 500)), ancho_global, 0.5f, 0.8f, true);
 
             Meta = new Rectangle((int)ancho_global * 22, (int)ancho_global * 20, ancho_global * 5, ancho_global * 3);
 
-            Vector2 posP = new Vector2(225, 4);
+            Vector2 posP = new Vector2(((225 * al) / 500), ((4 * al) / 225));
             P1 = new Player(posP, (int)(ancho_global * 1.7F), 3, Meta);
 
             V1.move();
@@ -73,6 +74,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Exit();
 
             var mouse = Mouse.GetState();
+            float scale_ = (float)_graphics.PreferredBackBufferHeight / 500f;
 
             if (!GameOver)
             {
@@ -97,7 +99,7 @@ namespace ProjectoU1SnowRiderChallenge
 
                 if (Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump)
                 {
-                    P1.Jump(gameTime);
+                    P1.Jump(gameTime,scale_);
                     P1.is_jump = true;
                 }
                 if (Keyboard.GetState().IsKeyUp(Keys.Space))
@@ -113,13 +115,13 @@ namespace ProjectoU1SnowRiderChallenge
                 }
 
                 if (P1.is_started)
-                    P1.update_(gameTime, V1, V2, V3);
+                    P1.update_(gameTime, V1, V2, V3, scale_);
             }
 
             if (P1.is_win || P1.vidas == 0)
                 GameOver = true;
 
-            base.Update(gameTime);
+                base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -127,15 +129,17 @@ namespace ProjectoU1SnowRiderChallenge
             GraphicsDevice.Clear(Color.CornflowerBlue);
             _spriteBatch.Begin();
 
-            V1.dd(_spriteBatch, _tuerca, _texture_bace, _font);
-            V2.dd(_spriteBatch, _tuerca, _texture_bace, _font);
-            V3.dd(_spriteBatch, _tuerca, _texture_bace, _font);
+            float scale_t = (float)_graphics.PreferredBackBufferHeight / 500f;
 
-            P1.dr(_spriteBatch, _pelota, _texture_bace, _font);
+            V1.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
+            V2.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
+            V3.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
+
+            P1.dr(_spriteBatch, _pelota, _texture_bace, _font, scale_t);
 
             _spriteBatch.Draw(_texture_bace, Meta, Color.Green);
             Vector2 tM = new Vector2(_font.MeasureString("META").X / 2 + Meta.X, _font.MeasureString("META").Y / 2 + Meta.Y);
-            _spriteBatch.DrawString(_font, "META", tM, Color.DarkGreen);
+            _spriteBatch.DrawString(_font, "META", tM, Color.DarkGreen, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
 
             if (GameOver)
             {
@@ -150,7 +154,7 @@ namespace ProjectoU1SnowRiderChallenge
                     string text = "GANASTE!!\nFelicidades, ganaste con:\n" + P1.vidas + " vidas\nTiempo: " + (Math.Round(P1.time, 3) + "s");
                     Vector2 pos_text = new Vector2(bo.Center.X, bo.Center.Y) - (_font.MeasureString(text) / 2);
                     _spriteBatch.Draw(_texture_bace, bo, bo_color);
-                    _spriteBatch.DrawString(_font, text, pos_text, Text_color);
+                    _spriteBatch.DrawString(_font, text, pos_text, Text_color, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
                 }
                 else
                 {
@@ -159,7 +163,7 @@ namespace ProjectoU1SnowRiderChallenge
                     Color Text_color = new Color(64f / 255f, 9f / 255f, 9f / 255f);
                     string text = "GameOver\nEs una pena :(\nTiempo: " + (Math.Round(P1.time, 3) + "s");
                     Vector2 pos_text = new Vector2(bo.Center.X, bo.Center.Y) - (_font.MeasureString(text) / 2);
-                    _spriteBatch.DrawString(_font, text, pos_text, Text_color);
+                    _spriteBatch.DrawString(_font, text, pos_text, Text_color, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
                 }
             }
 
@@ -181,6 +185,7 @@ namespace ProjectoU1SnowRiderChallenge
 
             return dist <= tolerance;
         }
+
 
         public class Player
         {
@@ -213,14 +218,14 @@ namespace ProjectoU1SnowRiderChallenge
                 speed = 0;
             }
 
-            public void dr(SpriteBatch _sb, Texture2D _pelota, Texture2D _base, SpriteFont _fue)
+            public void dr(SpriteBatch _sb, Texture2D _pelota, Texture2D _base, SpriteFont _fue, float scale)
             {
                 _sb.Draw(_pelota, Box, Color.White);
 
                 Color fondo = new Color(29f / 255f, 73f / 255f, 88f / 255f);
                 Color TEXT = new Color(188f / 255f, 229f / 255, 217f / 225f);
                 _sb.Draw(_base, BoxInfo, fondo);
-                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (int)speed + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT);
+                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (int)speed + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
 
             }
 
@@ -244,7 +249,7 @@ namespace ProjectoU1SnowRiderChallenge
                 acc = 9.8f;
                 is_started = true;
             }
-            public void update_(GameTime gameTime, Var V1, Var V2, Var V3)
+            public void update_(GameTime gameTime, Var V1, Var V2, Var V3, float scale)
             {
                 //colision
                 // detectar sobre qué rampa está
@@ -315,11 +320,11 @@ namespace ProjectoU1SnowRiderChallenge
 
                     if (angle < MathHelper.PiOver2)
                     {
-                        angle += 0.5f * dt;
+                        angle += 0.5f * scale * dt;
                     }
                     if (angle > MathHelper.PiOver2)
                     {
-                        angle -= 0.5f * dt;
+                        angle -= 0.5f * scale * dt;
                     }
 
                     speed += acc * dt;
@@ -334,14 +339,14 @@ namespace ProjectoU1SnowRiderChallenge
                 is_win = Is_Winner();
             }
 
-            public void Jump(GameTime gameTime)
+            public void Jump(GameTime gameTime, float scale)
             {
                 if (!air)
                 {
                     float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
                     Vector2 ramp_dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
                     normal = new Vector2(-ramp_dir.Y, ramp_dir.X);
-                    float jump_force = 3000;
+                    float jump_force = 3000*scale;
                     if (normal.Y < 0) normal = -normal;
 
                     Vector2 jump_dir = Vector2.Normalize(normal);
@@ -392,7 +397,7 @@ namespace ProjectoU1SnowRiderChallenge
                 is_Static = st;
             }
 
-            public void dd(SpriteBatch _sb, Texture2D _tuerca, Texture2D _base, SpriteFont fuente)
+            public void dd(SpriteBatch _sb, Texture2D _tuerca, Texture2D _base, SpriteFont fuente, float scale)
             {
                 if (!is_Static)
                 {
@@ -403,7 +408,7 @@ namespace ProjectoU1SnowRiderChallenge
                 _sb.Draw(_base, rr, null, Color.White, Ramp_angle, new Vector2(0, 0.5f), new Vector2(Ramp_length, Ramp_width), SpriteEffects.None, 0f);
                 Vector2 obb = new Vector2(Ob.X, Ob.Y);
                 _sb.Draw(_base, obb, null, Color.Brown, Ramp_angle, new Vector2(0, 0.5f), new Vector2(Ob.Width, Ob.Width), SpriteEffects.None, 0f);
-                draw_info(_sb, fuente);
+                draw_info(_sb, fuente, scale);
 
             }
 
@@ -452,7 +457,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Ob = new Rectangle((int)(ob_pos.X - (BoxA.Width / 2)), (int)(ob_pos.Y - (BoxA.Width / 2)), (int)(BoxA.Width * 0.5f), (int)(BoxA.Width * 0.5f));
             }
 
-            private void draw_info(SpriteBatch _sb, SpriteFont fuente)
+            private void draw_info(SpriteBatch _sb, SpriteFont fuente, float scale)
             {
                 float grados = MathHelper.ToDegrees(Ramp_angle);
                 string txt = "Angle: " + ((int)grados * -1) + "\nmuK: " + muK;
@@ -463,7 +468,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Vector2 tGr = rampCenter - textSize / 2f;
                 tGr.Y += textSize.Y;
                 // Convertir a grados
-                _sb.DrawString(fuente, txt, tGr, Color.Black);
+                _sb.DrawString(fuente, txt, tGr, Color.Black, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
 
             }
             public Vector2[] GetRampVertices()
