@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ProjectoU1SnowRiderChallenge
 {
@@ -13,6 +14,7 @@ namespace ProjectoU1SnowRiderChallenge
         private Texture2D _tuerca;
         private Texture2D _texture_bace;
         private Texture2D _pelota;
+        private bool GameOver = false;
 
         private Rectangle Meta;
 
@@ -37,14 +39,14 @@ namespace ProjectoU1SnowRiderChallenge
             _graphics.PreferredBackBufferHeight = al;
             _graphics.ApplyChanges();
             ancho_global = GraphicsDevice.Viewport.Width / 40;
-            V1 = new Var(new Vector2(200f, 63f), new Vector2(542f, 148f), ancho_global, 0.1f, 0.7f, true);
+            V1 = new Var(new Vector2(200f, 63f), new Vector2(542f, 148f), ancho_global, 0.01f, 0.7f, true);
             V2 = new Var(new Vector2(169f, 262f), new Vector2(697f, 182f), ancho_global, 0.1f, 0.5f, true);
-            V3 = new Var(new Vector2(57f, 323f), new Vector2(463f, 425f), ancho_global, 0.1f, 0.2f, true);
+            V3 = new Var(new Vector2(47f, 313f), new Vector2(463f, 425f), ancho_global, 0.5f, 0.8f, true);
 
             Meta = new Rectangle((int)ancho_global * 22, (int)ancho_global * 20, ancho_global * 5, ancho_global * 3);
 
-            Vector2 posP = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 3), ancho_global * 3);
-            P1 = new Player(posP, (int)(ancho_global * 1.7F), 3);
+            Vector2 posP = new Vector2(225, 4);
+            P1 = new Player(posP, (int)(ancho_global * 1.7F), 3, Meta);
 
             V1.move();
             V2.move();
@@ -72,45 +74,50 @@ namespace ProjectoU1SnowRiderChallenge
 
             var mouse = Mouse.GetState();
 
-            if (mouse.LeftButton == ButtonState.Pressed)
+            if (!GameOver)
             {
-                if (!P1.is_started)
+                if (mouse.LeftButton == ButtonState.Pressed)
                 {
-                    V1.move();
-                    V2.move();
-                    V3.move();
-                    P1.move_mouse();
+                    if (!P1.is_started)
+                    {
+                        V1.move();
+                        V2.move();
+                        V3.move();
+                        P1.move_mouse();
+                    }
+                    if (Meta.Contains(mouse.Position))
+                    {
+                        Meta.X = mouse.X - Meta.Width / 2;
+                        Meta.Y = mouse.Y - Meta.Height / 2;
+                    }
                 }
-                if (Meta.Contains(mouse.Position))
+
+                if (Keyboard.GetState().IsKeyDown(Keys.R))
+                    P1.Re_Spawn();
+
+                if (Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump)
                 {
-                    Meta.X = mouse.X - Meta.Width / 2;
-                    Meta.Y = mouse.Y - Meta.Height / 2;
+                    P1.Jump(gameTime);
+                    P1.is_jump = true;
                 }
+                if (Keyboard.GetState().IsKeyUp(Keys.Space))
+                {
+                    P1.is_jump = false;
+                }
+
+
+                if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                {
+                    P1.is_started = true;
+                    P1.Origen = P1.Position;
+                }
+
+                if (P1.is_started)
+                    P1.update_(gameTime, V1, V2, V3);
             }
 
-            if (Keyboard.GetState().IsKeyDown(Keys.R))
-                P1.Re_Spawn();
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump)
-            {
-                P1.Jump(gameTime);
-                P1.is_jump = true;
-            }
-            if (Keyboard.GetState().IsKeyUp(Keys.Space))
-            {
-                P1.is_jump = false;
-            }
-           
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Enter))
-            {
-                P1.is_started = true;
-                P1.Origen = P1.Position;
-            }
-                
-
-            if (P1.is_started)
-                P1.update_(gameTime, V1, V2,V3);
+            if (P1.is_win || P1.vidas == 0)
+                GameOver = true;
 
             base.Update(gameTime);
         }
@@ -120,15 +127,41 @@ namespace ProjectoU1SnowRiderChallenge
             GraphicsDevice.Clear(Color.CornflowerBlue);
             _spriteBatch.Begin();
 
-            V1.dd(_spriteBatch, _tuerca, _texture_bace, _font, P1.is_started);
-            V2.dd(_spriteBatch, _tuerca, _texture_bace, _font, P1.is_started);
-            V3.dd(_spriteBatch, _tuerca, _texture_bace, _font, P1.is_started);
+            V1.dd(_spriteBatch, _tuerca, _texture_bace, _font);
+            V2.dd(_spriteBatch, _tuerca, _texture_bace, _font);
+            V3.dd(_spriteBatch, _tuerca, _texture_bace, _font);
 
             P1.dr(_spriteBatch, _pelota, _texture_bace, _font);
 
             _spriteBatch.Draw(_texture_bace, Meta, Color.Green);
             Vector2 tM = new Vector2(_font.MeasureString("META").X / 2 + Meta.X, _font.MeasureString("META").Y / 2 + Meta.Y);
             _spriteBatch.DrawString(_font, "META", tM, Color.DarkGreen);
+
+            if (GameOver)
+            {
+                Rectangle bo = new Rectangle(ancho_global, ancho_global, GraphicsDevice.Viewport.Width - (ancho_global * 2), GraphicsDevice.Viewport.Height - (ancho_global * 2));
+                Rectangle _bo = new Rectangle(bo.X - (ancho_global / 2), bo.Y - (ancho_global / 2), bo.Width + ancho_global, bo.Height + ancho_global);
+                Color _bo_color = new Color(27f / 255f, 42f / 255f, 92f / 255f);
+                _spriteBatch.Draw(_texture_bace, _bo, _bo_color);
+                if (P1.vidas != 0)
+                {
+                    Color bo_color = new Color(74f / 255f, 200f / 255f, 152f / 255f);
+                    Color Text_color = new Color(44f / 255f, 68f / 255f, 196f / 255f);
+                    string text = "GANASTE!!\nFelicidades, ganaste con:\n" + P1.vidas + " vidas\nTiempo: " + (Math.Round(P1.time, 3) + "s");
+                    Vector2 pos_text = new Vector2(bo.Center.X, bo.Center.Y) - (_font.MeasureString(text) / 2);
+                    _spriteBatch.Draw(_texture_bace, bo, bo_color);
+                    _spriteBatch.DrawString(_font, text, pos_text, Text_color);
+                }
+                else
+                {
+                    Color bo_color = new Color(146f / 255f, 78f / 255f, 109f / 255f);
+                    _spriteBatch.Draw(_texture_bace, bo, bo_color);
+                    Color Text_color = new Color(64f / 255f, 9f / 255f, 9f / 255f);
+                    string text = "GameOver\nEs una pena :(\nTiempo: " + (Math.Round(P1.time, 3) + "s");
+                    Vector2 pos_text = new Vector2(bo.Center.X, bo.Center.Y) - (_font.MeasureString(text) / 2);
+                    _spriteBatch.DrawString(_font, text, pos_text, Text_color);
+                }
+            }
 
             _spriteBatch.End();
 
@@ -151,12 +184,12 @@ namespace ProjectoU1SnowRiderChallenge
 
         public class Player
         {
-            public Rectangle Box, BoxInfo;
+            public Rectangle Box, BoxInfo, mmeta;
             public Vector2 Position, Origen, normal;
             public float speed, angle, acc, time, peso;
             public int vidas;
-            public bool is_started, is_jump, air;
-            public Player(Vector2 po, int an, int vids)
+            public bool is_started, is_jump, air, is_win = false;
+            public Player(Vector2 po, int an, int vids, Rectangle Meta)
             {
                 is_started = false;
                 Position = po;
@@ -170,15 +203,14 @@ namespace ProjectoU1SnowRiderChallenge
                 normal = new Vector2();
                 is_jump = false;
                 air = true;
-                BoxInfo = new Rectangle(an/2, an/2, an * 5, (int)(an * 1.5f));
+                BoxInfo = new Rectangle(an / 2, an / 2, an * 5, (int)(an * 1.5f));
+                mmeta = Meta;
             }
             public void Re_Spawn()
             {
                 Position = Origen;
-                vidas -= 1;
                 angle = MathHelper.PiOver2;
                 speed = 0;
-
             }
 
             public void dr(SpriteBatch _sb, Texture2D _pelota, Texture2D _base, SpriteFont _fue)
@@ -188,8 +220,8 @@ namespace ProjectoU1SnowRiderChallenge
                 Color fondo = new Color(29f / 255f, 73f / 255f, 88f / 255f);
                 Color TEXT = new Color(188f / 255f, 229f / 255, 217f / 225f);
                 _sb.Draw(_base, BoxInfo, fondo);
-                _sb.DrawString(_fue, "S: "+Position.X+"."+Position.Y+"m "+"V: "+speed+"m/s"+"\nVidas: "+vidas, new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT);
-                
+                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (int)speed + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT);
+
             }
 
             public void move_mouse()
@@ -218,7 +250,7 @@ namespace ProjectoU1SnowRiderChallenge
                 // detectar sobre qué rampa está
                 Var rampaActiva = null;
 
-                Vector2 centerP = new Vector2(Box.Center.X, Box.Y+ Box.Height);
+                Vector2 centerP = new Vector2(Box.Center.X, Box.Y + Box.Height);
 
                 if (PointNearLine(centerP, V1.BoxA.Center.ToVector2(), V1.BoxB.Center.ToVector2(), V1.Ramp_width / 2))
                     rampaActiva = V1;
@@ -228,6 +260,9 @@ namespace ProjectoU1SnowRiderChallenge
                     rampaActiva = V3;
 
                 float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if (is_started)
+                    time += (1 * dt);
 
                 if (rampaActiva != null)
                 {
@@ -268,7 +303,10 @@ namespace ProjectoU1SnowRiderChallenge
 
                     //colision con el obstaculo
                     if (damage(rampaActiva))
-                        vidas--;
+                    {
+                        vidas -= 1;
+                        Re_Spawn();
+                    }
                 }
                 else
                 {
@@ -277,11 +315,11 @@ namespace ProjectoU1SnowRiderChallenge
 
                     if (angle < MathHelper.PiOver2)
                     {
-                        angle += 1 * dt;
+                        angle += 0.5f * dt;
                     }
                     if (angle > MathHelper.PiOver2)
                     {
-                        angle -= 1 * dt;
+                        angle -= 0.5f * dt;
                     }
 
                     speed += acc * dt;
@@ -293,7 +331,7 @@ namespace ProjectoU1SnowRiderChallenge
 
                 Box.X = (int)Position.X;
                 Box.Y = (int)Position.Y;
-
+                is_win = Is_Winner();
             }
 
             public void Jump(GameTime gameTime)
@@ -303,18 +341,29 @@ namespace ProjectoU1SnowRiderChallenge
                     float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
                     Vector2 ramp_dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
                     normal = new Vector2(-ramp_dir.Y, ramp_dir.X);
-                    float jump_force = 2000;
-                    Vector2 Jump_ = normal * jump_force;
+                    float jump_force = 3000;
+                    if (normal.Y < 0) normal = -normal;
+
+                    Vector2 jump_dir = Vector2.Normalize(normal);
+                    Vector2 Jump_ = jump_dir * jump_force;
                     Position -= Jump_ * dt;
+
+                    angle = (float)Math.Atan2(jump_dir.Y, jump_dir.X);
 
                 }
             }
 
-            private bool damage( Var ramp)
+            private bool damage(Var ramp)
             {
-                if (Box.Contains(ramp.Ob.X, ramp.Ob.Y))
+                if (Box.Contains(ramp.Ob.X, ramp.Ob.Y) || Box.Contains(ramp.Ob.X + ramp.Ob.Width, ramp.Ob.Y))
                     return true;
+                return false;
+            }
 
+            private bool Is_Winner()
+            {
+                if (mmeta.Contains(Box))
+                    return true;
                 return false;
             }
 
@@ -330,7 +379,7 @@ namespace ProjectoU1SnowRiderChallenge
             public float muK;
             public bool is_Static;
 
-            public Var(Vector2 origen,Vector2 origenB, float ancho, float _muk, float ob_dis, bool st)
+            public Var(Vector2 origen, Vector2 origenB, float ancho, float _muk, float ob_dis, bool st)
             {
                 muK = _muk;
                 BoxA = new Rectangle((int)origen.X, (int)origen.Y, (int)ancho, (int)ancho);
@@ -343,9 +392,9 @@ namespace ProjectoU1SnowRiderChallenge
                 is_Static = st;
             }
 
-            public void dd(SpriteBatch _sb, Texture2D _tuerca,Texture2D _base, SpriteFont fuente, bool active)
+            public void dd(SpriteBatch _sb, Texture2D _tuerca, Texture2D _base, SpriteFont fuente)
             {
-                if (!active)
+                if (!is_Static)
                 {
                     _sb.Draw(_tuerca, BoxA, Color.White);
                     _sb.Draw(_tuerca, BoxB, Color.White);
@@ -407,13 +456,14 @@ namespace ProjectoU1SnowRiderChallenge
             {
                 float grados = MathHelper.ToDegrees(Ramp_angle);
                 string txt = "Angle: " + ((int)grados * -1) + "\nmuK: " + muK;
-                Vector2 ogr = new Vector2(Math.Abs(BoxA.Center.X - BoxB.Center.X), Math.Abs(BoxA.Center.Y - BoxB.Center.Y));
-                Vector2 tGr = new Vector2(ogr.X - (fuente.MeasureString(txt).X / 2), ogr.Y + (fuente.MeasureString(txt).Y / 2));
-                Console.WriteLine("centerX: " + tGr.X + "centerY: " + tGr.Y);
-                //Vector2 tMuk = new Vector2((int)BoxA.X - BoxA.Width, (int)BoxA.Y - BoxA.Width * 2);
+                Vector2 centerA = new Vector2(BoxA.Center.X, BoxA.Center.Y);
+                Vector2 centerB = new Vector2(BoxB.Center.X, BoxB.Center.Y);
+                Vector2 rampCenter = (centerA + centerB) / 2f;
+                Vector2 textSize = fuente.MeasureString(txt);
+                Vector2 tGr = rampCenter - textSize / 2f;
+                tGr.Y += textSize.Y;
                 // Convertir a grados
                 _sb.DrawString(fuente, txt, tGr, Color.Black);
-                //_sb.DrawString(fuente, "muk: " + muK, tMuk, Color.Black);
 
             }
             public Vector2[] GetRampVertices()
