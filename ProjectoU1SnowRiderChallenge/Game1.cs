@@ -16,6 +16,7 @@ namespace ProjectoU1SnowRiderChallenge
         private Texture2D _pelota;
         private int al;
         private bool GameOver = false;
+        private bool StaticMode = true;
 
         private Rectangle Meta;
 
@@ -34,24 +35,24 @@ namespace ProjectoU1SnowRiderChallenge
 
         protected override void Initialize()
         {
-            al = 900;
+            al = 500;
             int an = (al * 16) / 9;
             _graphics.PreferredBackBufferWidth = an;
             _graphics.PreferredBackBufferHeight = al;
             _graphics.ApplyChanges();
             ancho_global = GraphicsDevice.Viewport.Width / 40;
-            V1 = new Var(new Vector2(((200f * al) / 500), ((63f * al) / 500)), new Vector2(((542f * al) / 500), ((148f * al) / 500)), ancho_global, 0.01f, 0.7f, true);
-            V2 = new Var(new Vector2(((169f * al) / 500), ((262f * al) / 500)), new Vector2(((697f * al) / 500), ((182f * al) / 500)), ancho_global, 0.1f, 0.5f, true);
-            V3 = new Var(new Vector2(((47f * al) / 500), ((313f * al) / 500)), new Vector2(((463f * al) / 500), ((425f * al) / 500)), ancho_global, 0.5f, 0.8f, true);
+            V1 = new Var(new Vector2(((200f * al) / 500), ((63f * al) / 500)), new Vector2(((542f * al) / 500), ((148f * al) / 500)), ancho_global, 0.01f, 0.7f, StaticMode);
+            V2 = new Var(new Vector2(((169f * al) / 500), ((262f * al) / 500)), new Vector2(((697f * al) / 500), ((182f * al) / 500)), ancho_global, 0.1f, 0.5f, StaticMode);
+            V3 = new Var(new Vector2(((47f * al) / 500), ((313f * al) / 500)), new Vector2(((463f * al) / 500), ((425f * al) / 500)), ancho_global, 0.5f, 0.8f, StaticMode);
 
             Meta = new Rectangle((int)ancho_global * 22, (int)ancho_global * 20, ancho_global * 5, ancho_global * 3);
 
             Vector2 posP = new Vector2(((225 * al) / 500), ((4 * al) / 225));
             P1 = new Player(posP, (int)(ancho_global * 1.7F), 3, Meta);
 
-            V1.move();
-            V2.move();
-            V3.move();
+            V1.move(StaticMode);
+            V2.move(StaticMode);
+            V3.move(StaticMode);
 
             base.Initialize();
         }
@@ -69,22 +70,19 @@ namespace ProjectoU1SnowRiderChallenge
 
         protected override void Update(GameTime gameTime)
         {
-
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
             var mouse = Mouse.GetState();
             float scale_ = (float)_graphics.PreferredBackBufferHeight / 500f;
-
             if (!GameOver)
             {
                 if (mouse.LeftButton == ButtonState.Pressed)
                 {
                     if (!P1.is_started)
                     {
-                        V1.move();
-                        V2.move();
-                        V3.move();
+                        V1.move(StaticMode);
+                        V2.move(StaticMode);
+                        V3.move(StaticMode);
                         P1.move_mouse();
                     }
                     if (Meta.Contains(mouse.Position))
@@ -106,14 +104,11 @@ namespace ProjectoU1SnowRiderChallenge
                 {
                     P1.is_jump = false;
                 }
-
-
                 if (Keyboard.GetState().IsKeyDown(Keys.Enter))
                 {
                     P1.is_started = true;
                     P1.Origen = P1.Position;
                 }
-
                 if (P1.is_started)
                     P1.update_(gameTime, V1, V2, V3, scale_);
             }
@@ -121,7 +116,7 @@ namespace ProjectoU1SnowRiderChallenge
             if (P1.is_win || P1.vidas == 0)
                 GameOver = true;
 
-                base.Update(gameTime);
+            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -412,18 +407,21 @@ namespace ProjectoU1SnowRiderChallenge
 
             }
 
-            public void move()
+            public void move( bool st)
             {
                 var mouse = Mouse.GetState();
-                if (BoxA.Contains(mouse.Position))
+                if (!st)
                 {
-                    BoxA.X = mouse.X - BoxA.Width / 2;
-                    BoxA.Y = mouse.Y - BoxA.Height / 2;
-                }
-                else if (BoxB.Contains(mouse.Position))
-                {
-                    BoxB.X = mouse.X - BoxB.Width / 2;
-                    BoxB.Y = mouse.Y - BoxB.Height / 2;
+                    if (BoxA.Contains(mouse.Position))
+                    {
+                        BoxA.X = mouse.X - BoxA.Width / 2;
+                        BoxA.Y = mouse.Y - BoxA.Height / 2;
+                    }
+                    else if (BoxB.Contains(mouse.Position))
+                    {
+                        BoxB.X = mouse.X - BoxB.Width / 2;
+                        BoxB.Y = mouse.Y - BoxB.Height / 2;
+                    }
                 }
                 update_ramp();
             }
