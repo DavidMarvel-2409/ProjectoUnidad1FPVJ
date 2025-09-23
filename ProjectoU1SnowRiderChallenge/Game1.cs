@@ -17,8 +17,6 @@ namespace ProjectoU1SnowRiderChallenge
         private int al;
         private bool GameOver = false;
         private bool StaticMode = true;
-        private bool is_Exit = false;
-        private bool Started = false;
 
         private Rectangle Meta;
 
@@ -26,7 +24,7 @@ namespace ProjectoU1SnowRiderChallenge
 
         Player P1;
 
-        Buttonn Extit_, StartButton;
+        Buttonn Extit_, StartButton, JumpButton;
 
         private int ancho_global;
 
@@ -39,15 +37,15 @@ namespace ProjectoU1SnowRiderChallenge
 
         protected override void Initialize()
         {
-            al = 500;
+            al = 720;
             int an = (al * 16) / 9;
             _graphics.PreferredBackBufferWidth = an;
             _graphics.PreferredBackBufferHeight = al;
             _graphics.ApplyChanges();
             ancho_global = GraphicsDevice.Viewport.Width / 40;
-            V1 = new Var(new Vector2(((200f * al) / 500), ((63f * al) / 500)), new Vector2(((542f * al) / 500), ((148f * al) / 500)), ancho_global, 0.01f, 0.7f, StaticMode);
+            V1 = new Var(new Vector2(((200f * al) / 500), ((63f * al) / 500)), new Vector2(((542f * al) / 500), ((148f * al) / 500)), ancho_global, 0.3f, 0.7f, StaticMode);
             V2 = new Var(new Vector2(((169f * al) / 500), ((262f * al) / 500)), new Vector2(((697f * al) / 500), ((182f * al) / 500)), ancho_global, 0.1f, 0.5f, StaticMode);
-            V3 = new Var(new Vector2(((47f * al) / 500), ((313f * al) / 500)), new Vector2(((463f * al) / 500), ((425f * al) / 500)), ancho_global, 0.5f, 0.8f, StaticMode);
+            V3 = new Var(new Vector2(((47f * al) / 500), ((313f * al) / 500)), new Vector2(((463f * al) / 500), ((425f * al) / 500)), ancho_global, 2, 0.8f, StaticMode);
 
             Meta = new Rectangle((int)ancho_global * 22, (int)ancho_global * 20, ancho_global * 5, ancho_global * 3);
 
@@ -58,8 +56,15 @@ namespace ProjectoU1SnowRiderChallenge
             V2.move(StaticMode);
             V3.move(StaticMode);
 
-            Extit_ = new Buttonn(is_Exit, new Vector2(GraphicsDevice.Viewport.Width - ancho_global * 3, ancho_global * 3), new Vector2(ancho_global * 2, ancho_global), "Exit", new Vector3(125f / 255f, 42f / 255f, 46f / 255f));
-            StartButton = new Buttonn(Started, new Vector2(GraphicsDevice.Viewport.Width - ancho_global * 4, (GraphicsDevice.Viewport.Height / 2) - ancho_global / 2), new Vector2(ancho_global * 3, ancho_global), "START", new Vector3(79f / 255f, 202f / 255f, 145f / 255f));
+            Vector2 posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 4.7f), (ancho_global));
+            Vector2 dim_button = new Vector2(ancho_global * 4, ancho_global);
+            Extit_ = new Buttonn(false, posButton, dim_button, "Exit", new Vector3(125f / 255f, 42f / 255f, 46f / 255f));
+            posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 4.7f), (GraphicsDevice.Viewport.Height / 2) - (ancho_global/2));
+            dim_button = new Vector2(ancho_global * 4, ancho_global);
+            StartButton = new Buttonn(false, posButton, dim_button, "START", new Vector3(79f / 255f, 202f / 255f, 145f / 255f));
+            posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 6.7f), GraphicsDevice.Viewport.Height - (ancho_global * 1.3f));
+            dim_button = new Vector2(ancho_global * 6, ancho_global);
+            JumpButton = new Buttonn(false, posButton, dim_button, "JUMP", new Vector3(59f / 255f, 108f / 255f, 255f / 255f));
 
             base.Initialize();
         }
@@ -85,7 +90,6 @@ namespace ProjectoU1SnowRiderChallenge
             float scale_ = (float)_graphics.PreferredBackBufferHeight / 500f;
             if (!GameOver)
             {
-                Extit_._update();
                 if (mouse.LeftButton == ButtonState.Pressed)
                 {
                     if (!P1.is_started)
@@ -105,7 +109,7 @@ namespace ProjectoU1SnowRiderChallenge
                 if (Keyboard.GetState().IsKeyDown(Keys.R))
                     P1.Re_Spawn();
 
-                if (Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump)
+                if ((Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump) || (JumpButton.funtion && !P1.is_jump))
                 {
                     P1.Jump(gameTime,scale_);
                     P1.is_jump = true;
@@ -118,12 +122,16 @@ namespace ProjectoU1SnowRiderChallenge
                 {
                     P1.is_started = true;
                     P1.Origen = P1.Position;
+                    StaticMode = true;
                 }
                 if (P1.is_started)
                     P1.update_(gameTime, V1, V2, V3, scale_);
+
             }
 
+            Extit_._update();
             StartButton._update();
+            JumpButton._update();
 
             if (P1.is_win || P1.vidas == 0)
                 GameOver = true;
@@ -138,18 +146,6 @@ namespace ProjectoU1SnowRiderChallenge
 
             float scale_t = (float)_graphics.PreferredBackBufferHeight / 500f;
 
-            V1.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
-            V2.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
-            V3.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
-
-            P1.dr(_spriteBatch, _pelota, _texture_bace, _font, scale_t);
-
-            Extit_.dr(_spriteBatch, _font, _texture_bace);
-            StartButton.dr(_spriteBatch, _font, _texture_bace);
-
-            _spriteBatch.Draw(_texture_bace, Meta, Color.Green);
-            Vector2 tM = new Vector2(_font.MeasureString("META").X / 2 + Meta.X, _font.MeasureString("META").Y / 2 + Meta.Y);
-            _spriteBatch.DrawString(_font, "META", tM, Color.DarkGreen, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
 
             if (GameOver)
             {
@@ -161,7 +157,7 @@ namespace ProjectoU1SnowRiderChallenge
                 {
                     Color bo_color = new Color(74f / 255f, 200f / 255f, 152f / 255f);
                     Color Text_color = new Color(44f / 255f, 68f / 255f, 196f / 255f);
-                    string text = "GANASTE!!\nFelicidades, ganaste con:\n" + P1.vidas + " vidas\nTiempo: " + (Math.Round(P1.time, 3) + "s");
+                    string text = "GANASTE!!\nFelicidades, ganaste con:\n" + P1.vidas + " vidas\nTiempo: " + (Math.Round(P1.time, 2) + "s");
                     Vector2 pos_text = new Vector2(bo.Center.X, bo.Center.Y) - (_font.MeasureString(text) / 2);
                     _spriteBatch.Draw(_texture_bace, bo, bo_color);
                     _spriteBatch.DrawString(_font, text, pos_text, Text_color, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
@@ -171,12 +167,28 @@ namespace ProjectoU1SnowRiderChallenge
                     Color bo_color = new Color(146f / 255f, 78f / 255f, 109f / 255f);
                     _spriteBatch.Draw(_texture_bace, bo, bo_color);
                     Color Text_color = new Color(64f / 255f, 9f / 255f, 9f / 255f);
-                    string text = "GameOver\nEs una pena :(\nTiempo: " + (Math.Round(P1.time, 3) + "s");
+                    string text = "GameOver\nEs una pena :(\nTiempo: " + (Math.Round(P1.time, 2) + "s");
                     Vector2 pos_text = new Vector2(bo.Center.X, bo.Center.Y) - (_font.MeasureString(text) / 2);
                     _spriteBatch.DrawString(_font, text, pos_text, Text_color, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
                 }
             }
+            else
+            {
+                V1.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
+                V2.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
+                V3.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
 
+                P1.dr(_spriteBatch, _pelota, _texture_bace, _font, scale_t);
+
+                StartButton.dr(_spriteBatch, _font, _texture_bace);
+                JumpButton.dr(_spriteBatch, _font, _texture_bace);
+
+                _spriteBatch.Draw(_texture_bace, Meta, Color.Green);
+                Vector2 tM = new Vector2(_font.MeasureString("META").X / 2 + Meta.X, _font.MeasureString("META").Y / 2 + Meta.Y);
+                _spriteBatch.DrawString(_font, "META", tM, Color.DarkGreen, 0f, Vector2.Zero, scale_t, SpriteEffects.None, 1f);
+            }
+
+            Extit_.dr(_spriteBatch, _font, _texture_bace);
             _spriteBatch.End();
 
             base.Draw(gameTime);
@@ -438,6 +450,7 @@ namespace ProjectoU1SnowRiderChallenge
                         BoxB.Y = mouse.Y - BoxB.Height / 2;
                     }
                 }
+                is_Static = st;
                 update_ramp();
             }
 
@@ -505,7 +518,7 @@ namespace ProjectoU1SnowRiderChallenge
         public class Buttonn
         {
             public Rectangle Box;
-            public bool presset, funtion, is_selected = false;
+            public bool presset, funtion, is_selected = false, is_switch = false;
             public Vector3 the_color;
             public String Name;
 
@@ -521,8 +534,12 @@ namespace ProjectoU1SnowRiderChallenge
             public void _update()
             {
                 var mouse = Mouse.GetState();
-                if (Box.Contains(mouse.Position) && mouse.LeftButton == ButtonState.Pressed)
+                if (Box.Contains(mouse.Position) && mouse.LeftButton == ButtonState.Pressed && !funtion)
+                {
                     funtion = true;
+                }
+                else
+                    funtion = false;
                 if (Box.Contains(mouse.Position))
                     is_selected = true;
                 else
@@ -531,6 +548,7 @@ namespace ProjectoU1SnowRiderChallenge
 
             public void dr(SpriteBatch _sb, SpriteFont fuente, Texture2D _base)
             {
+
                 float scaleX = (float)Box.Width / fuente.MeasureString(Name).X;
                 float scaleY = (float)Box.Height / fuente.MeasureString(Name).Y;
                 float scale = Math.Min(scaleX, scaleY) * 0.8f;
@@ -540,7 +558,12 @@ namespace ProjectoU1SnowRiderChallenge
                 Rectangle the_base = new Rectangle((int)(Box.X - (((Box.Width * 1.2f) - Box.Width)/2)), (int)(Box.Y-(((Box.Height * 1.2f)-Box.Height)/2)), (int)(Box.Width * 1.2f), (int)(Box.Height * 1.2f));
                 _sb.Draw(_base, the_base, fondo_color);
                 if (is_selected)
-                    _sb.Draw(_base, Box, fondo_color);
+                {
+                    if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+                        _sb.Draw(_base, Box, _theButton * 0.25f);
+                    else
+                        _sb.Draw(_base, Box, fondo_color);
+                }
                 else
                     _sb.Draw(_base, Box, _theButton);
 
