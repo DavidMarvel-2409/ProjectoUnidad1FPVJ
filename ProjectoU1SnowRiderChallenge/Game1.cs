@@ -17,12 +17,16 @@ namespace ProjectoU1SnowRiderChallenge
         private int al;
         private bool GameOver = false;
         private bool StaticMode = true;
+        private bool is_Exit = false;
+        private bool Started = false;
 
         private Rectangle Meta;
 
         Var V1, V2, V3;
 
         Player P1;
+
+        Buttonn Extit_, StartButton;
 
         private int ancho_global;
 
@@ -54,6 +58,9 @@ namespace ProjectoU1SnowRiderChallenge
             V2.move(StaticMode);
             V3.move(StaticMode);
 
+            Extit_ = new Buttonn(is_Exit, new Vector2(GraphicsDevice.Viewport.Width - ancho_global * 3, ancho_global * 3), new Vector2(ancho_global * 2, ancho_global), "Exit", new Vector3(125f / 255f, 42f / 255f, 46f / 255f));
+            StartButton = new Buttonn(Started, new Vector2(GraphicsDevice.Viewport.Width - ancho_global * 4, (GraphicsDevice.Viewport.Height / 2) - ancho_global / 2), new Vector2(ancho_global * 3, ancho_global), "START", new Vector3(79f / 255f, 202f / 255f, 145f / 255f));
+
             base.Initialize();
         }
 
@@ -72,10 +79,13 @@ namespace ProjectoU1SnowRiderChallenge
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+            if (Extit_.funtion)
+                Exit();
             var mouse = Mouse.GetState();
             float scale_ = (float)_graphics.PreferredBackBufferHeight / 500f;
             if (!GameOver)
             {
+                Extit_._update();
                 if (mouse.LeftButton == ButtonState.Pressed)
                 {
                     if (!P1.is_started)
@@ -104,7 +114,7 @@ namespace ProjectoU1SnowRiderChallenge
                 {
                     P1.is_jump = false;
                 }
-                if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                if (Keyboard.GetState().IsKeyDown(Keys.Enter) || StartButton.funtion)
                 {
                     P1.is_started = true;
                     P1.Origen = P1.Position;
@@ -112,6 +122,8 @@ namespace ProjectoU1SnowRiderChallenge
                 if (P1.is_started)
                     P1.update_(gameTime, V1, V2, V3, scale_);
             }
+
+            StartButton._update();
 
             if (P1.is_win || P1.vidas == 0)
                 GameOver = true;
@@ -131,6 +143,9 @@ namespace ProjectoU1SnowRiderChallenge
             V3.dd(_spriteBatch, _tuerca, _texture_bace, _font, scale_t);
 
             P1.dr(_spriteBatch, _pelota, _texture_bace, _font, scale_t);
+
+            Extit_.dr(_spriteBatch, _font, _texture_bace);
+            StartButton.dr(_spriteBatch, _font, _texture_bace);
 
             _spriteBatch.Draw(_texture_bace, Meta, Color.Green);
             Vector2 tM = new Vector2(_font.MeasureString("META").X / 2 + Meta.X, _font.MeasureString("META").Y / 2 + Meta.Y);
@@ -485,6 +500,56 @@ namespace ProjectoU1SnowRiderChallenge
 
                 return new[] { v1, v2, v3, v4 };
             }
+        }
+
+        public class Buttonn
+        {
+            public Rectangle Box;
+            public bool presset, funtion, is_selected = false;
+            public Vector3 the_color;
+            public String Name;
+
+            public Buttonn(bool fun, Vector2 pos, Vector2 dim, string name,Vector3 _color)
+            {
+                presset = false;
+                funtion = fun;
+                Box = new Rectangle((int)pos.X, (int)pos.Y, (int)dim.X, (int)dim.Y);
+                Name = name;
+                the_color = _color;
+            }
+
+            public void _update()
+            {
+                var mouse = Mouse.GetState();
+                if (Box.Contains(mouse.Position) && mouse.LeftButton == ButtonState.Pressed)
+                    funtion = true;
+                if (Box.Contains(mouse.Position))
+                    is_selected = true;
+                else
+                    is_selected = false;
+            }
+
+            public void dr(SpriteBatch _sb, SpriteFont fuente, Texture2D _base)
+            {
+                float scaleX = (float)Box.Width / fuente.MeasureString(Name).X;
+                float scaleY = (float)Box.Height / fuente.MeasureString(Name).Y;
+                float scale = Math.Min(scaleX, scaleY) * 0.8f;
+                Color fondo_color = new Color(the_color.X * 0.7f, the_color.Y * 0.7f, the_color.Z * 0.7f);
+                Color _theButton = new Color(the_color.X, the_color.Y, the_color.Z);
+                Color _text_color = new Color(the_color.X * 0.01f, the_color.Y * 0.01f, the_color.Z * 0.01f);
+                Rectangle the_base = new Rectangle((int)(Box.X - (((Box.Width * 1.2f) - Box.Width)/2)), (int)(Box.Y-(((Box.Height * 1.2f)-Box.Height)/2)), (int)(Box.Width * 1.2f), (int)(Box.Height * 1.2f));
+                _sb.Draw(_base, the_base, fondo_color);
+                if (is_selected)
+                    _sb.Draw(_base, Box, fondo_color);
+                else
+                    _sb.Draw(_base, Box, _theButton);
+
+                Vector2 textSize = fuente.MeasureString(Name);
+                Vector2 textPos = new Vector2(Box.Center.X, Box.Center.Y);
+
+                _sb.DrawString(fuente, Name, textPos, _text_color, 0f, textSize / 2f, scale, SpriteEffects.None, 1f);
+            }
+
         }
     }
 }
