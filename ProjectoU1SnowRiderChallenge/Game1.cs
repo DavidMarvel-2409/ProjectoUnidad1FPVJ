@@ -230,7 +230,7 @@ namespace ProjectoU1SnowRiderChallenge
                 normal = new Vector2();
                 is_jump = false;
                 air = true;
-                BoxInfo = new Rectangle(an / 2, an / 2, an * 5, (int)(an * 1.5f));
+                BoxInfo = new Rectangle(an / 2, an / 2, (int)(an * 5.1f), (int)(an * 1.7f));
                 mmeta = Meta;
             }
             public void Re_Spawn()
@@ -247,7 +247,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Color fondo = new Color(29f / 255f, 73f / 255f, 88f / 255f);
                 Color TEXT = new Color(188f / 255f, 229f / 255, 217f / 225f);
                 _sb.Draw(_base, BoxInfo, fondo);
-                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (Math.Round(speed / scale,1)) + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (Math.Round(speed / scale,1)) + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s\nInt=Euler", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
 
             }
 
