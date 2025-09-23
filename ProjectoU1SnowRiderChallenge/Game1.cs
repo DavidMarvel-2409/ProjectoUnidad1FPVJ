@@ -37,7 +37,7 @@ namespace ProjectoU1SnowRiderChallenge
 
         protected override void Initialize()
         {
-            al = 720;
+            al = 900;
             int an = (al * 16) / 9;
             _graphics.PreferredBackBufferWidth = an;
             _graphics.PreferredBackBufferHeight = al;
@@ -247,7 +247,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Color fondo = new Color(29f / 255f, 73f / 255f, 88f / 255f);
                 Color TEXT = new Color(188f / 255f, 229f / 255, 217f / 225f);
                 _sb.Draw(_base, BoxInfo, fondo);
-                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (int)speed + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+                _sb.DrawString(_fue, "S: X" + (int)Position.X + ".Y" + (int)Position.Y + "m " + "V: " + (int)(Math.Round(speed / scale,2)) + "m/s" + "\nVidas: " + vidas + " T: " + (Math.Round(time, 1)) + "s", new Vector2(BoxInfo.X + 10, BoxInfo.Y + 10), TEXT, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
 
             }
 
@@ -325,8 +325,8 @@ namespace ProjectoU1SnowRiderChallenge
                     // Guardar ángulo de la rampa
                     angle = (float)Math.Atan2(rampDir.Y, rampDir.X);
 
-                    speed += acc * dt;
-                    Position += rampDir * speed * dt;
+                    speed += acc * dt * scale;
+                    Position += rampDir * speed * dt * scale;
 
                     //colision con el obstaculo
                     if (damage(rampaActiva))
