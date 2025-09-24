@@ -59,7 +59,7 @@ namespace ProjectoU1SnowRiderChallenge
             Vector2 posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 4.7f), (ancho_global));
             Vector2 dim_button = new Vector2(ancho_global * 4, ancho_global);
             Extit_ = new Buttonn(false, posButton, dim_button, "Exit", new Vector3(125f / 255f, 42f / 255f, 46f / 255f));
-            posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 4.7f), (GraphicsDevice.Viewport.Height / 2) - (ancho_global/2));
+            posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 4.7f), (GraphicsDevice.Viewport.Height / 2) - (ancho_global / 2));
             dim_button = new Vector2(ancho_global * 4, ancho_global);
             StartButton = new Buttonn(false, posButton, dim_button, "START", new Vector3(79f / 255f, 202f / 255f, 145f / 255f));
             posButton = new Vector2(GraphicsDevice.Viewport.Width - (ancho_global * 6.7f), GraphicsDevice.Viewport.Height - (ancho_global * 1.3f));
@@ -111,7 +111,7 @@ namespace ProjectoU1SnowRiderChallenge
 
                 if ((Keyboard.GetState().IsKeyDown(Keys.Space) && !P1.is_jump) || (JumpButton.funtion && !P1.is_jump))
                 {
-                    P1.Jump(gameTime,scale_);
+                    P1.Jump(gameTime, scale_);
                     P1.is_jump = true;
                 }
                 if (Keyboard.GetState().IsKeyUp(Keys.Space))
@@ -206,14 +206,13 @@ namespace ProjectoU1SnowRiderChallenge
             float dist = Vector2.Distance(p, closest);
 
             return dist <= tolerance;
-        }
-
+        } 
 
         public class Player
         {
             public Rectangle Box, BoxInfo, mmeta;
             public Vector2 Position, Origen, normal;
-            public float speed, angle, acc, time, peso;
+            public float speed, angle, acc, time;
             public int vidas;
             public bool is_started, is_jump, air, is_win = false;
             public Player(Vector2 po, int an, int vids, Rectangle Meta)
@@ -225,7 +224,6 @@ namespace ProjectoU1SnowRiderChallenge
                 angle = MathHelper.PiOver2;
                 acc = 0;
                 time = 0;
-                peso = 0;
                 Box = new Rectangle((int)Position.X, (int)Position.Y, an, an);
                 normal = new Vector2();
                 is_jump = false;
@@ -267,7 +265,6 @@ namespace ProjectoU1SnowRiderChallenge
             public void Start_()
             {
                 Origen = Position;
-                peso = 5;
                 acc = 9.8f;
                 is_started = true;
             }
@@ -299,32 +296,24 @@ namespace ProjectoU1SnowRiderChallenge
                                             rampaActiva.BoxA.Y + rampaActiva.BoxA.Height / 2);
                     Vector2 B = new Vector2(rampaActiva.BoxB.X + rampaActiva.BoxB.Width / 2,
                                             rampaActiva.BoxB.Y + rampaActiva.BoxB.Height / 2);
-
                     // Gravedad
                     float g = 9.8f;
-
                     // Dirección unitaria de la rampa
                     Vector2 rampDir;
                     if (B.Y < A.Y)
                         rampDir = Vector2.Normalize(A - B);
                     else
                         rampDir = Vector2.Normalize(B - A);
-
                     // Gravedad
                     Vector2 gravity = new Vector2(0, g);
-
                     // Proyección: producto punto
                     float accAlongRamp = Vector2.Dot(gravity, rampDir);
-
                     // Fricción (opuesta al movimiento)
                     float friction = rampaActiva.muK * g * (float)Math.Cos(rampaActiva.Ramp_angle);
-
                     // Aceleración total
                     acc = accAlongRamp - Math.Sign(speed) * friction;
-
                     // Guardar ángulo de la rampa
                     angle = (float)Math.Atan2(rampDir.Y, rampDir.X);
-
                     speed += acc * dt * scale;
                     Position += rampDir * speed * dt * scale;
 
@@ -339,18 +328,11 @@ namespace ProjectoU1SnowRiderChallenge
                 {
                     // caída libre hacia abajo
                     acc = 9.8f;
-
                     if (angle < MathHelper.PiOver2)
-                    {
                         angle += 0.5f * scale * dt;
-                    }
                     if (angle > MathHelper.PiOver2)
-                    {
                         angle -= 0.5f * scale * dt;
-                    }
-
                     speed += acc * dt;
-
                     Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
                     Position += dir * speed * dt;
                     air = true;
@@ -370,13 +352,10 @@ namespace ProjectoU1SnowRiderChallenge
                     normal = new Vector2(-ramp_dir.Y, ramp_dir.X);
                     float jump_force = 3000*scale;
                     if (normal.Y < 0) normal = -normal;
-
                     Vector2 jump_dir = Vector2.Normalize(normal);
                     Vector2 Jump_ = jump_dir * jump_force;
                     Position -= Jump_ * dt;
-
                     angle = (float)Math.Atan2(jump_dir.Y, jump_dir.X);
-
                 }
             }
 
@@ -411,7 +390,7 @@ namespace ProjectoU1SnowRiderChallenge
                 muK = _muk;
                 BoxA = new Rectangle((int)origen.X, (int)origen.Y, (int)ancho, (int)ancho);
                 BoxB = new Rectangle((int)(origenB.X), (int)origenB.Y, (int)ancho, (int)ancho);
-                float ramp_ancho = (ancho * 30) / 100;
+                float ramp_ancho = 0.4f;
                 float Dx = BoxB.X - BoxA.X;
                 Ramp = new Rectangle(BoxA.X + ((int)ramp_ancho), BoxA.Y + ((int)ramp_ancho), (int)(Dx + (ramp_ancho)), (int)ramp_ancho);
                 Ob = new Rectangle((int)(Ramp.X + (Ramp.Width * ob_dis)), Ramp.Y, (int)(ancho * 0.5f), (int)(ancho * 0.5f));
@@ -467,7 +446,7 @@ namespace ProjectoU1SnowRiderChallenge
                 Ramp_length = delta.Length();
 
                 // Grosor (proporcional al tamaño de las cajas)
-                Ramp_width = BoxA.Width * 0.3f;
+                Ramp_width = BoxA.Width * 0.4f;
 
                 // Posición = punto medio
                 Ramp.X = (int)centerA.X;
